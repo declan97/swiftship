@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   // Required for Vercel monorepo deployments
   outputFileTracingRoot: join(__dirname, '../../'),
-  output: 'standalone',
 };
 
 export default nextConfig;
