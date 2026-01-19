@@ -290,7 +290,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
               });
             }
             // Navigate to the new project
-            router.replace(`/projects/${newProjectId}`);
+            router.replace(`/dashboard/projects/${newProjectId}`);
             toast.success('Project created!');
           } catch (error) {
             console.error('Failed to create project:', error);
@@ -395,7 +395,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
           generatedCode,
         });
       }
-      router.replace(`/projects/${newProjectId}`);
+      router.replace(`/dashboard/projects/${newProjectId}`);
       toast.success('Project saved!');
     } catch (error) {
       console.error('Failed to save:', error);
@@ -420,7 +420,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
       <div className="flex flex-col items-center justify-center h-full gap-4">
         <div className="text-muted-foreground">Project not found</div>
         <button
-          onClick={() => router.push('/projects/new')}
+          onClick={() => router.push('/dashboard/projects/new')}
           className="text-primary hover:underline"
         >
           Create a new project

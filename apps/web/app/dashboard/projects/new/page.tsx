@@ -23,7 +23,7 @@ export default function NewProjectPage() {
     if (description.trim()) {
       params.set('prompt', description.trim());
     }
-    router.push(`/projects/${newId}?${params.toString()}`);
+    router.push(`/dashboard/projects/${newId}?${params.toString()}`);
   };
 
   return (

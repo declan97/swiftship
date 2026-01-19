@@ -91,7 +91,7 @@ export default function DashboardPage() {
           <ThemeToggle />
 
           <Button asChild size="touch">
-            <Link href="/projects/new" className="flex items-center gap-2">
+            <Link href="/dashboard/projects/new" className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
               New Project
             </Link>
@@ -145,7 +145,7 @@ export default function DashboardPage() {
               </Button>
             </motion.div>
           ) : (
-            <NoProjectsEmptyState onCreateProject={() => router.push('/projects/new')} />
+            <NoProjectsEmptyState onCreateProject={() => router.push('/dashboard/projects/new')} />
           )
         ) : (
           <motion.div
@@ -188,7 +188,7 @@ function ProjectCard({
     return (
       <motion.div variants={staggerItem}>
         <AnimatedCard className="p-4">
-          <Link href={`/projects/${project._id}`} className="flex items-center gap-4">
+          <Link href={`/dashboard/projects/${project._id}`} className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
               <Folder className="w-5 h-5" />
             </div>
@@ -216,7 +216,7 @@ function ProjectCard({
           <Folder className="w-12 h-12 text-muted-foreground/50" />
         </div>
 
-        <Link href={`/projects/${project._id}`} className="block p-4">
+        <Link href={`/dashboard/projects/${project._id}`} className="block p-4">
           <h3 className="font-medium truncate">{project.name}</h3>
           {project.description && (
             <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{project.description}</p>

@@ -112,7 +112,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       Home
                     </CommandItem>
                     <CommandItem
-                      onSelect={() => runCommand(() => router.push('/projects/new'))}
+                      onSelect={() => runCommand(() => router.push('/dashboard/projects/new'))}
                       icon={<Plus />}
                       shortcut="⌘N"
                     >

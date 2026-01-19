@@ -82,7 +82,7 @@ export default function HomePage() {
       : prompt;
 
     const newId = `new-${Date.now()}`;
-    router.push(`/projects/${newId}?name=${encodeURIComponent(projectName)}&prompt=${encodeURIComponent(prompt)}`);
+    router.push(`/dashboard/projects/${newId}?name=${encodeURIComponent(projectName)}&prompt=${encodeURIComponent(prompt)}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -126,7 +126,7 @@ export default function HomePage() {
             </Button>
             <ThemeToggle />
             <Button size="sm" className="h-8 rounded-full px-4 text-xs font-medium" asChild>
-              <Link href="/projects/new">
+              <Link href="/dashboard/projects/new">
                 Start Building
               </Link>
             </Button>
@@ -385,7 +385,7 @@ export default function HomePage() {
                 Join thousands of developers building apps 10x faster.
               </p>
               <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-xl shadow-primary/20" asChild>
-                <Link href="/projects/new">
+                <Link href="/dashboard/projects/new">
                   Start Building for Free
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Link>
