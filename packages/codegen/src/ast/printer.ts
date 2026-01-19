@@ -252,8 +252,9 @@ export class SwiftPrinter {
       result += ` ${node.parameters.join(', ')} in`;
     }
 
-    if (node.body.length === 1) {
-      result += ` ${this.printNode(node.body[0])} }`;
+    const firstBody = node.body[0];
+    if (node.body.length === 1 && firstBody) {
+      result += ` ${this.printNode(firstBody)} }`;
     } else {
       result += '\n';
       this.indentLevel++;

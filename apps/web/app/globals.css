@@ -4,79 +4,79 @@
 
 @layer base {
   :root {
-    /* Brand Colors - oklch for perceptual uniformity */
+    /* Brand Colors - OKLCH */
     --color-brand-50: oklch(0.98 0.01 250);
     --color-brand-100: oklch(0.95 0.03 250);
-    --color-brand-200: oklch(0.90 0.06 250);
-    --color-brand-300: oklch(0.80 0.10 250);
-    --color-brand-400: oklch(0.70 0.14 250);
     --color-brand-500: oklch(0.60 0.18 250);
+    /* Primary */
     --color-brand-600: oklch(0.52 0.20 250);
-    --color-brand-700: oklch(0.44 0.18 250);
-    --color-brand-800: oklch(0.36 0.14 250);
-    --color-brand-900: oklch(0.28 0.10 250);
+    /* Hover */
+    --color-brand-900: oklch(0.25 0.08 250);
 
     /* Semantic Tokens - Light Mode */
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.625rem;
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(0.99 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+
+    --primary: oklch(0.60 0.18 250);
+    --primary-foreground: oklch(0.98 0 0);
+
+    --secondary: oklch(0.97 0 0);
+    --secondary-foreground: oklch(0.25 0.08 250);
+
+    --muted: oklch(0.96 0.005 250);
+    --muted-foreground: oklch(0.45 0.01 250);
+
+    --accent: oklch(0.96 0.005 250);
+    --accent-foreground: oklch(0.25 0.08 250);
+
+    --destructive: oklch(0.63 0.26 29);
+    --destructive-foreground: oklch(0.98 0 0);
+
+    --border: oklch(0.92 0.005 250);
+    --input: oklch(0.92 0.005 250);
+    --ring: oklch(0.60 0.18 250);
+
+    --radius: 0.5rem;
 
     /* Gradient Tokens */
     --gradient-start: oklch(0.60 0.18 250);
     --gradient-end: oklch(0.65 0.16 200);
     --gradient-accent: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-
-    /* Typography Scale */
-    --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
-    --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
-    --text-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
-    --text-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
-    --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
-    --text-2xl: clamp(1.5rem, 1.25rem + 1.25vw, 2rem);
-    --text-3xl: clamp(1.875rem, 1.5rem + 1.875vw, 2.5rem);
-    --text-4xl: clamp(2.25rem, 1.75rem + 2.5vw, 3.5rem);
-
-    /* Spacing */
-    --spacing-section: clamp(4rem, 8vw, 8rem);
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 224.3 76.3% 48%;
+    /* Deep Dark Theme - OKLCH */
+    --background: oklch(0.12 0.005 250);
+    --foreground: oklch(0.95 0 0);
+
+    --card: oklch(0.16 0.01 250);
+    --card-foreground: oklch(0.95 0 0);
+
+    --popover: oklch(0.16 0.01 250);
+    --popover-foreground: oklch(0.95 0 0);
+
+    --primary: oklch(0.60 0.18 250);
+    --primary-foreground: oklch(0.98 0 0);
+
+    --secondary: oklch(0.18 0.01 250);
+    --secondary-foreground: oklch(0.95 0 0);
+
+    --muted: oklch(0.20 0.01 250);
+    --muted-foreground: oklch(0.65 0.01 250);
+
+    --accent: oklch(0.20 0.01 250);
+    --accent-foreground: oklch(0.95 0 0);
+
+    --destructive: oklch(0.35 0.15 29);
+    --destructive-foreground: oklch(0.95 0 0);
+
+    --border: oklch(0.25 0.01 250);
+    --input: oklch(0.25 0.01 250);
+    --ring: oklch(0.60 0.18 250);
   }
 }
 
@@ -135,7 +135,7 @@ code {
 }
 
 /* Inline code */
-:not(pre) > code {
+:not(pre)>code {
   @apply bg-muted px-1.5 py-0.5 rounded text-sm font-medium;
 }
 
@@ -166,6 +166,7 @@ code {
    Animation Utilities
    ============================================================================ */
 @layer utilities {
+
   /* Fade in animation */
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out forwards;
@@ -182,27 +183,49 @@ code {
   }
 
   /* Stagger children */
-  .stagger > * {
+  .stagger>* {
     opacity: 0;
     animation: fadeInUp 0.5s ease-out forwards;
   }
-  .stagger > *:nth-child(1) { animation-delay: 0ms; }
-  .stagger > *:nth-child(2) { animation-delay: 50ms; }
-  .stagger > *:nth-child(3) { animation-delay: 100ms; }
-  .stagger > *:nth-child(4) { animation-delay: 150ms; }
-  .stagger > *:nth-child(5) { animation-delay: 200ms; }
-  .stagger > *:nth-child(6) { animation-delay: 250ms; }
-  .stagger > *:nth-child(7) { animation-delay: 300ms; }
-  .stagger > *:nth-child(8) { animation-delay: 350ms; }
+
+  .stagger>*:nth-child(1) {
+    animation-delay: 0ms;
+  }
+
+  .stagger>*:nth-child(2) {
+    animation-delay: 50ms;
+  }
+
+  .stagger>*:nth-child(3) {
+    animation-delay: 100ms;
+  }
+
+  .stagger>*:nth-child(4) {
+    animation-delay: 150ms;
+  }
+
+  .stagger>*:nth-child(5) {
+    animation-delay: 200ms;
+  }
+
+  .stagger>*:nth-child(6) {
+    animation-delay: 250ms;
+  }
+
+  .stagger>*:nth-child(7) {
+    animation-delay: 300ms;
+  }
+
+  .stagger>*:nth-child(8) {
+    animation-delay: 350ms;
+  }
 
   /* Shimmer effect for loading */
   .shimmer {
-    background: linear-gradient(
-      90deg,
-      hsl(var(--muted)) 0%,
-      hsl(var(--muted-foreground) / 0.1) 50%,
-      hsl(var(--muted)) 100%
-    );
+    background: linear-gradient(90deg,
+        hsl(var(--muted)) 0%,
+        hsl(var(--muted-foreground) / 0.1) 50%,
+        hsl(var(--muted)) 100%);
     background-size: 200% 100%;
     animation: shimmer 1.5s ease-in-out infinite;
   }
@@ -228,8 +251,13 @@ code {
 
 /* Keyframes */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
@@ -237,6 +265,7 @@ code {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -248,6 +277,7 @@ code {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -259,6 +289,7 @@ code {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -266,14 +297,20 @@ code {
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 /* ============================================================================
    Reduced Motion Support
    ============================================================================ */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -283,7 +320,7 @@ code {
     scroll-behavior: auto !important;
   }
 
-  .stagger > * {
+  .stagger>* {
     animation: none;
     opacity: 1;
   }
