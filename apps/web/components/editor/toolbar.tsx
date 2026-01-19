@@ -1,7 +1,10 @@
 'use client';
 
-import { Monitor, Smartphone, Code2, Columns, Save, Download, Undo2, Redo2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Smartphone, Code2, Columns, Save, Download, Undo2, Redo2, Loader2 } from 'lucide-react';
+import { Button, MotionButton } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { springConfig } from '@/lib/animations';
 
 type ViewMode = 'preview' | 'code' | 'split';
 
@@ -31,33 +34,55 @@ export function Toolbar({
   onRedo,
 }: ToolbarProps) {
   return (
-    <div className="h-12 border-b bg-background flex items-center justify-between px-4">
+    <motion.div
+      className="h-14 border-b glass sticky top-0 z-10 flex items-center justify-between px-4"
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={springConfig.gentle}
+    >
       {/* Left section: Project name */}
       <div className="flex items-center gap-3">
-        <span className="font-semibold">{projectName}</span>
+        <motion.span
+          className="font-semibold truncate max-w-[200px]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
+        >
+          {projectName}
+        </motion.span>
+
         {/* Undo/Redo */}
         <div className="flex items-center gap-1 ml-2">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onUndo}
             disabled={!canUndo}
-            className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            title="Undo"
+            className="h-10 w-10"
+            title="Undo (⌘Z)"
           >
             <Undo2 className="w-4 h-4" />
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onRedo}
             disabled={!canRedo}
-            className="p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-            title="Redo"
+            className="h-10 w-10"
+            title="Redo (⌘⇧Z)"
           >
             <Redo2 className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Center section: View toggle */}
-      <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+      <motion.div
+        className="flex items-center gap-1 bg-muted rounded-lg p-1"
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ ...springConfig.default, delay: 0.15 }}
+      >
         <ViewButton
           icon={<Smartphone className="w-4 h-4" />}
           label="Preview"
@@ -76,31 +101,55 @@ export function Toolbar({
           isActive={activeView === 'code'}
           onClick={() => onViewChange('code')}
         />
-      </div>
+      </motion.div>
 
       {/* Right section: Actions */}
-      <div className="flex items-center gap-2">
+      <motion.div
+        className="flex items-center gap-2"
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ ...springConfig.gentle, delay: 0.2 }}
+      >
         {onSave && (
-          <button
+          <Button
+            variant="ghost"
+            size="touch"
             onClick={onSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+            className="gap-2"
           >
-            <Save className="w-4 h-4" />
-            <span className="text-sm">{isSaving ? 'Saving...' : 'Save'}</span>
-          </button>
+            <AnimatePresence mode="wait">
+              {isSaving ? (
+                <motion.div
+                  key="saving"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                >
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="save"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                >
+                  <Save className="w-4 h-4" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
+          </Button>
         )}
         {onExport && (
-          <button
-            onClick={onExport}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
+          <MotionButton size="touch" className="gap-2" onClick={onExport}>
             <Download className="w-4 h-4" />
-            <span className="text-sm">Export</span>
-          </button>
+            <span className="hidden sm:inline">Export</span>
+          </MotionButton>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -116,15 +165,26 @@ function ViewButton({
   onClick: () => void;
 }) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
       className={cn(
-        'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm transition-colors',
-        isActive ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'
+        'relative flex items-center gap-1.5 px-3 min-h-[36px] rounded-md text-sm font-medium transition-colors',
+        isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
       )}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
     >
-      {icon}
-      <span className="hidden sm:inline">{label}</span>
-    </button>
+      {isActive && (
+        <motion.div
+          className="absolute inset-0 bg-background shadow-sm rounded-md"
+          layoutId="activeViewIndicator"
+          transition={springConfig.default}
+        />
+      )}
+      <span className="relative z-10 flex items-center gap-1.5">
+        {icon}
+        <span className="hidden sm:inline">{label}</span>
+      </span>
+    </motion.button>
   );
 }

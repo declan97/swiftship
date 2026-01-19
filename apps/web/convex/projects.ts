@@ -76,6 +76,18 @@ export const updateAppConfig = mutation({
   },
 });
 
+// Get messages for a project
+export const getMessages = query({
+  args: { projectId: v.id('projects') },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query('messages')
+      .withIndex('by_project', (q) => q.eq('projectId', args.projectId))
+      .order('asc')
+      .collect();
+  },
+});
+
 // Delete a project
 export const remove = mutation({
   args: { id: v.id('projects') },

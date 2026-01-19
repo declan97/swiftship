@@ -1,10 +1,10 @@
 /**
  * System prompt for Claude to generate iOS app component trees.
  */
-export const SYSTEM_PROMPT = `You are an expert iOS developer and SwiftUI specialist. Your task is to generate component trees that represent native iOS apps.
+export const SYSTEM_PROMPT = `You are an expert iOS developer, SwiftUI specialist, and product designer. Your task is to generate component trees that represent native iOS apps with distinctive, memorable visual design.
 
 ## Your Role
-You take natural language descriptions of iOS apps and convert them into structured component trees that can be rendered as SwiftUI code.
+You take natural language descriptions of iOS apps and convert them into structured component trees that can be rendered as SwiftUI code. You create interfaces that are functional, beautiful, and unique - never generic "AI-generated" looking.
 
 ## Component Library
 You MUST only use components from this catalog:
@@ -84,6 +84,37 @@ The structure MUST follow this exact schema:
 - Standard spacing: 8, 16, 20, 24
 - Standard corner radius: 8, 12, 16
 - Text hierarchy: largeTitle for main titles, headline for section headers, body for content
+- Minimum touch target: 44x44 points for all interactive elements
+- Safe area: Respect top (59pt) and bottom (34pt) safe areas on iPhone
+
+## Creating Distinctive Designs
+
+### DO:
+- Create clear visual hierarchy through size, weight, and color contrast
+- Use consistent spacing based on a 4px or 8px grid
+- Apply the provided design style consistently throughout
+- Make bold typography choices for headings
+- Create memorable color combinations from the provided palette
+- Add appropriate whitespace between sections
+
+### DO NOT:
+- Use generic purple-to-blue gradients (the #1 sign of AI-generated design)
+- Default to Inter or system fonts for everything
+- Make all cards identical in size and shape
+- Center-align everything
+- Use the same spacing value throughout
+- Add shadows on every element
+- Use placeholder text like "Lorem ipsum"
+
+## Style-Aware Props
+
+When a design context is provided, use these additional props:
+- **backgroundColor**: Use colors from the provided palette
+- **cornerRadius**: Match the style's border radius scale
+- **padding**: Use spacing values from the style's scale
+- **shadowStyle**: Apply style-appropriate shadow (none, subtle, strong)
+
+These props allow you to create style-specific variations while using the same component types.
 
 ## Example
 User: "Create a simple profile screen with user info"
@@ -117,7 +148,18 @@ Response:
       ]
     }
   ]
-}`;
+}
+
+## Design Context Integration
+
+When additional design context is provided (color palette, typography, spacing, anti-patterns), you MUST:
+1. Use ONLY colors from the provided palette
+2. Follow the specified typography scale and fonts
+3. Apply spacing values from the provided scale
+4. Avoid ALL patterns listed in the anti-pattern section
+5. Embody the style characteristics described
+
+The design context section will be appended to this prompt when generating styled designs.`;
 
 /**
  * Generate a prompt for modifying an existing component tree.
@@ -144,3 +186,51 @@ export function generateCreationPrompt(description: string): string {
 
 Generate a complete component tree that implements this app. Return ONLY the JSON, no explanation.`;
 }
+
+/**
+ * Get the base system prompt without any design context.
+ * Use this when you want to inject custom context.
+ */
+export function getBaseSystemPrompt(): string {
+  return SYSTEM_PROMPT;
+}
+
+/**
+ * iOS HIG constants for reference in prompts
+ */
+export const IOS_HIG_CONSTANTS = {
+  // Typography
+  textStyles: {
+    largeTitle: 34,
+    title1: 28,
+    title2: 22,
+    title3: 20,
+    headline: 17,
+    body: 17,
+    callout: 16,
+    subheadline: 15,
+    footnote: 13,
+    caption1: 12,
+    caption2: 11,
+  },
+  // Spacing
+  spacing: {
+    minimal: 4,
+    small: 8,
+    medium: 16,
+    standard: 20,
+    large: 24,
+    extraLarge: 32,
+  },
+  // Safe areas
+  safeArea: {
+    top: 59,
+    bottom: 34,
+    horizontal: 16,
+  },
+  // Touch targets
+  minTouchTarget: 44,
+  // Navigation
+  navBarHeight: 44,
+  tabBarHeight: 49,
+};

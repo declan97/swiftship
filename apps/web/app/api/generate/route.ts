@@ -2,48 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { generateViewFile } from '@swiftship/codegen';
 import type { ComponentNode } from '@swiftship/core';
+import {
+  SYSTEM_PROMPT,
+  buildDesignContext,
+  formatDesignContextForPrompt,
+  type DesignContextOptions,
+} from '@swiftship/ai';
 
-// System prompt for Claude
-const SYSTEM_PROMPT = `You are an expert iOS developer and SwiftUI specialist. Your task is to generate component trees that represent native iOS apps.
-
-## Component Library
-You MUST only use components from this catalog:
-
-### Primitives
-- **text**: Display text with font, weight, color, alignment, lineLimit
-  - fonts: largeTitle, title, title2, title3, headline, body, callout, subheadline, footnote, caption, caption2
-  - weights: ultraLight, thin, light, regular, medium, semibold, bold, heavy, black
-- **button**: Tappable control with label, style (bordered/borderedProminent/borderless/plain), role (none/cancel/destructive)
-- **icon**: SF Symbol with name, size (small/medium/large/extraLarge), color
-- **spacer**: Flexible space with optional minLength
-- **divider**: Visual separator line
-
-### Layout
-- **vstack**: Vertical stack with alignment (leading/center/trailing) and spacing
-- **hstack**: Horizontal stack with alignment (top/center/bottom) and spacing
-- **scrollview**: Scrollable container with axes (vertical/horizontal/both)
-- **list**: Scrollable list with style (automatic/plain/grouped/insetGrouped)
-- **section**: List section with optional header/footer strings
-
-### Navigation
-- **navigationstack**: Navigation container with title
-
-## Output Format
-Respond with ONLY valid JSON. No markdown, no explanation, just the component tree.
-
-The structure MUST follow this exact schema:
-{
-  "id": "uuid-string",
-  "type": "component-type",
-  "props": { ... component-specific props ... },
-  "children": [ ... nested components ... ]
+/**
+ * Request body for the generate API
+ */
+interface GenerateRequest {
+  prompt: string;
+  currentTree?: ComponentNode;
+  designContext?: DesignContextOptions;
 }
-
-## Rules
-1. ALWAYS start with a layout container (vstack, navigationstack, list)
-2. Generate valid UUID v4 strings for every "id" field
-3. Use iOS design patterns: proper spacing (8, 16, 20), semantic colors
-4. Use SF Symbols for icons (e.g., "plus", "trash", "gear", "person.circle")`;
 
 function generateUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -53,7 +26,7 @@ function generateUUID(): string {
   });
 }
 
-function ensureUUIDs(node: any): any {
+function ensureUUIDs(node: ComponentNode): ComponentNode {
   const id = node.id && /^[0-9a-f-]{36}$/i.test(node.id) ? node.id : generateUUID();
   return {
     ...node,
@@ -76,9 +49,59 @@ function extractJSON(text: string): string {
   return text.trim();
 }
 
+/**
+ * Build the enhanced system prompt with design context
+ */
+function buildEnhancedPrompt(designContextOptions?: DesignContextOptions): string {
+  if (!designContextOptions) {
+    return SYSTEM_PROMPT;
+  }
+
+  const context = buildDesignContext(designContextOptions);
+  const contextSection = formatDesignContextForPrompt(context);
+
+  return `${SYSTEM_PROMPT}
+
+${contextSection}`;
+}
+
+/**
+ * Build the user prompt for generation
+ */
+function buildUserPrompt(
+  prompt: string,
+  currentTree?: ComponentNode,
+  designContextOptions?: DesignContextOptions
+): string {
+  const styleName = designContextOptions?.styleId
+    ? buildDesignContext(designContextOptions).style.name
+    : null;
+
+  if (currentTree) {
+    return `The user wants to modify an existing iOS app. Here is the current component tree:
+
+\`\`\`json
+${JSON.stringify(currentTree, null, 2)}
+\`\`\`
+
+User's modification request: "${prompt}"
+${styleName ? `\nMaintain the ${styleName} visual style throughout.` : ''}
+
+Generate the complete updated component tree with the requested changes. Return ONLY the JSON, no explanation.`;
+  }
+
+  return `Create an iOS app component tree based on this description:
+
+"${prompt}"
+${styleName ? `\nDesign Style: ${styleName}` : ''}
+
+Generate a complete component tree that implements this app. Return ONLY the JSON, no explanation.`;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { prompt, currentTree } = await request.json();
+    const body: GenerateRequest = await request.json();
+    const { prompt, currentTree, designContext } = body;
 
     if (!prompt) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
@@ -87,39 +110,28 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       // Return mock data for development without API key
+      const mockTree = getMockComponentTree(prompt, designContext);
       return NextResponse.json({
-        componentTree: getMockComponentTree(prompt),
+        componentTree: mockTree,
         generatedCode: '// Mock code - set ANTHROPIC_API_KEY to enable AI generation',
-        message: "I've created a basic layout for your app. (Mock mode - no API key)",
+        message: `I've created a basic layout for your app. (Mock mode - no API key)${designContext?.styleId ? ` Style: ${designContext.styleId}` : ''}`,
+        metadata: {
+          styleId: designContext?.styleId ?? 'default',
+          mock: true,
+        },
       });
     }
 
     const client = new Anthropic({ apiKey });
 
-    // Build the prompt
-    let userPrompt = '';
-    if (currentTree) {
-      userPrompt = `The user wants to modify an existing iOS app. Here is the current component tree:
-
-\`\`\`json
-${JSON.stringify(currentTree, null, 2)}
-\`\`\`
-
-User's modification request: "${prompt}"
-
-Generate the complete updated component tree with the requested changes. Return ONLY the JSON, no explanation.`;
-    } else {
-      userPrompt = `Create an iOS app component tree based on this description:
-
-"${prompt}"
-
-Generate a complete component tree that implements this app. Return ONLY the JSON, no explanation.`;
-    }
+    // Build prompts with design context
+    const systemPrompt = buildEnhancedPrompt(designContext);
+    const userPrompt = buildUserPrompt(prompt, currentTree, designContext);
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
-      system: SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
     });
 
@@ -155,6 +167,11 @@ Generate a complete component tree that implements this app. Return ONLY the JSO
       componentTree,
       generatedCode,
       message: "I've updated your app. Check the preview!",
+      metadata: {
+        styleId: designContext?.styleId ?? 'default',
+        inputTokens: message.usage?.input_tokens,
+        outputTokens: message.usage?.output_tokens,
+      },
     });
   } catch (error) {
     console.error('Generation error:', error);
@@ -165,9 +182,20 @@ Generate a complete component tree that implements this app. Return ONLY the JSO
   }
 }
 
-// Mock component tree for development without API key
-function getMockComponentTree(prompt: string): ComponentNode {
+/**
+ * Mock component tree for development without API key
+ * Now includes style-specific colors based on design context
+ */
+function getMockComponentTree(
+  prompt: string,
+  designContext?: DesignContextOptions
+): ComponentNode {
   const lowerPrompt = prompt.toLowerCase();
+
+  // Get style-specific colors
+  const context = designContext ? buildDesignContext(designContext) : null;
+  const primaryColor = context?.style.colorPalette.primary ?? '#007AFF';
+  const accentColor = context?.style.colorPalette.accent ?? '#34C759';
 
   if (lowerPrompt.includes('todo') || lowerPrompt.includes('task')) {
     return {
@@ -190,8 +218,16 @@ function getMockComponentTree(prompt: string): ComponentNode {
                   type: 'hstack',
                   props: { spacing: 12 },
                   children: [
-                    { id: generateUUID(), type: 'icon', props: { name: 'circle', size: 'medium', color: '#007AFF' } },
-                    { id: generateUUID(), type: 'text', props: { content: 'Buy groceries', font: 'body' } },
+                    {
+                      id: generateUUID(),
+                      type: 'icon',
+                      props: { name: 'circle', size: 'medium', color: primaryColor },
+                    },
+                    {
+                      id: generateUUID(),
+                      type: 'text',
+                      props: { content: 'Buy groceries', font: 'body' },
+                    },
                   ],
                 },
                 {
@@ -199,8 +235,16 @@ function getMockComponentTree(prompt: string): ComponentNode {
                   type: 'hstack',
                   props: { spacing: 12 },
                   children: [
-                    { id: generateUUID(), type: 'icon', props: { name: 'checkmark.circle.fill', size: 'medium', color: '#34C759' } },
-                    { id: generateUUID(), type: 'text', props: { content: 'Walk the dog', font: 'body', color: 'secondaryLabel' } },
+                    {
+                      id: generateUUID(),
+                      type: 'icon',
+                      props: { name: 'checkmark.circle.fill', size: 'medium', color: accentColor },
+                    },
+                    {
+                      id: generateUUID(),
+                      type: 'text',
+                      props: { content: 'Walk the dog', font: 'body', color: 'secondaryLabel' },
+                    },
                   ],
                 },
                 {
@@ -208,8 +252,16 @@ function getMockComponentTree(prompt: string): ComponentNode {
                   type: 'hstack',
                   props: { spacing: 12 },
                   children: [
-                    { id: generateUUID(), type: 'icon', props: { name: 'circle', size: 'medium', color: '#007AFF' } },
-                    { id: generateUUID(), type: 'text', props: { content: 'Finish project', font: 'body' } },
+                    {
+                      id: generateUUID(),
+                      type: 'icon',
+                      props: { name: 'circle', size: 'medium', color: primaryColor },
+                    },
+                    {
+                      id: generateUUID(),
+                      type: 'text',
+                      props: { content: 'Finish project', font: 'body' },
+                    },
                   ],
                 },
               ],
@@ -220,6 +272,64 @@ function getMockComponentTree(prompt: string): ComponentNode {
           id: generateUUID(),
           type: 'button',
           props: { label: 'Add Task', style: 'borderedProminent', icon: 'plus' },
+        },
+      ],
+    };
+  }
+
+  if (lowerPrompt.includes('note')) {
+    return {
+      id: generateUUID(),
+      type: 'navigationstack',
+      props: { title: 'Notes' },
+      children: [
+        {
+          id: generateUUID(),
+          type: 'list',
+          props: { style: 'plain' },
+          children: [
+            {
+              id: generateUUID(),
+              type: 'section',
+              props: {},
+              children: [
+                {
+                  id: generateUUID(),
+                  type: 'vstack',
+                  props: { alignment: 'leading', spacing: 4 },
+                  children: [
+                    {
+                      id: generateUUID(),
+                      type: 'text',
+                      props: { content: 'Meeting Notes', font: 'headline', weight: 'semibold' },
+                    },
+                    {
+                      id: generateUUID(),
+                      type: 'text',
+                      props: { content: 'Discussed Q4 roadmap and priorities...', font: 'body', color: 'secondaryLabel', lineLimit: 2 },
+                    },
+                  ],
+                },
+                {
+                  id: generateUUID(),
+                  type: 'vstack',
+                  props: { alignment: 'leading', spacing: 4 },
+                  children: [
+                    {
+                      id: generateUUID(),
+                      type: 'text',
+                      props: { content: 'Shopping List', font: 'headline', weight: 'semibold' },
+                    },
+                    {
+                      id: generateUUID(),
+                      type: 'text',
+                      props: { content: 'Milk, eggs, bread, coffee...', font: 'body', color: 'secondaryLabel', lineLimit: 2 },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
         },
       ],
     };
@@ -236,10 +346,26 @@ function getMockComponentTree(prompt: string): ComponentNode {
         type: 'vstack',
         props: { alignment: 'center', spacing: 20 },
         children: [
-          { id: generateUUID(), type: 'icon', props: { name: 'person.circle.fill', size: 'extraLarge', color: '#007AFF' } },
-          { id: generateUUID(), type: 'text', props: { content: 'John Doe', font: 'title', weight: 'bold' } },
-          { id: generateUUID(), type: 'text', props: { content: 'john@example.com', font: 'subheadline', color: 'secondaryLabel' } },
-          { id: generateUUID(), type: 'button', props: { label: 'Edit Profile', style: 'bordered' } },
+          {
+            id: generateUUID(),
+            type: 'icon',
+            props: { name: 'person.circle.fill', size: 'extraLarge', color: primaryColor },
+          },
+          {
+            id: generateUUID(),
+            type: 'text',
+            props: { content: 'John Doe', font: 'title', weight: 'bold' },
+          },
+          {
+            id: generateUUID(),
+            type: 'text',
+            props: { content: 'john@example.com', font: 'subheadline', color: 'secondaryLabel' },
+          },
+          {
+            id: generateUUID(),
+            type: 'button',
+            props: { label: 'Edit Profile', style: 'bordered' },
+          },
         ],
       },
     ],

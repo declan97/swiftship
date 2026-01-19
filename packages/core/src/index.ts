@@ -8,3 +8,4 @@ export * from './types/app.js';
 export * from './types/component.js';
 export * from './types/project.js';
 export * from './types/user.js';
+export * from './types/design-tokens.js';

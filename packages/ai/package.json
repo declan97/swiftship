@@ -19,6 +19,7 @@
     "@anthropic-ai/sdk": "^0.39.0",
     "@swiftship/components": "workspace:*",
     "@swiftship/core": "workspace:*",
+    "culori": "^4.0.2",
     "zod": "^3.24.0"
   },
   "devDependencies": {

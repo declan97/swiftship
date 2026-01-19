@@ -1,9 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Smartphone, Moon, Sun, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Smartphone, Moon, Sun, RefreshCw, ZoomIn, ZoomOut } from 'lucide-react';
 import type { ComponentNode } from '@swiftship/core';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { springConfig, fadeInUp } from '@/lib/animations';
+import { useEditorStore } from '@/lib/stores/editor';
 
 interface PreviewProps {
   componentTree: ComponentNode | null;
@@ -12,52 +16,146 @@ interface PreviewProps {
 }
 
 export function Preview({ componentTree, onNodeSelect, selectedNodeId }: PreviewProps) {
-  const [isDark, setIsDark] = useState(false);
+  // Use Zustand store for persisted state
+  const zoom = useEditorStore((state) => state.zoom);
+  const setZoom = useEditorStore((state) => state.setZoom);
+  const isDark = useEditorStore((state) => state.isDarkMode);
+  const setIsDark = useEditorStore((state) => state.setDarkMode);
+
+  // Local state for refresh key only
   const [key, setKey] = useState(0);
 
   const handleRefresh = () => {
     setKey((k) => k + 1);
   };
 
+  const handleZoomIn = () => {
+    setZoom(zoom + 0.1);
+  };
+
+  const handleZoomOut = () => {
+    setZoom(zoom - 0.1);
+  };
+
   return (
     <div className="flex flex-col h-full bg-muted/30">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-background">
+      <motion.div
+        className="flex items-center justify-between px-4 py-3 border-b glass"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={springConfig.gentle}
+      >
         <div className="flex items-center gap-2">
           <Smartphone className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium">Preview</span>
+          <motion.span
+            className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            iPhone 15 Pro
+          </motion.span>
         </div>
         <div className="flex items-center gap-1">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleZoomOut}
+            className="h-9 w-9"
+            title="Zoom out"
+            disabled={zoom <= 0.5}
+          >
+            <ZoomOut className="w-4 h-4" />
+          </Button>
+          <span className="text-xs text-muted-foreground w-12 text-center">
+            {Math.round(zoom * 100)}%
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleZoomIn}
+            className="h-9 w-9"
+            title="Zoom in"
+            disabled={zoom >= 1.5}
+          >
+            <ZoomIn className="w-4 h-4" />
+          </Button>
+          <div className="w-px h-5 bg-border mx-1" />
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setIsDark(!isDark)}
-            className="p-1.5 rounded hover:bg-muted transition-colors"
+            className="h-9 w-9"
             title={isDark ? 'Light mode' : 'Dark mode'}
           >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
-          <button
+            <AnimatePresence mode="wait">
+              {isDark ? (
+                <motion.div
+                  key="sun"
+                  initial={{ rotate: -90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: 90, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Sun className="w-4 h-4" />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="moon"
+                  initial={{ rotate: 90, opacity: 0 }}
+                  animate={{ rotate: 0, opacity: 1 }}
+                  exit={{ rotate: -90, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Moon className="w-4 h-4" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleRefresh}
-            className="p-1.5 rounded hover:bg-muted transition-colors"
+            className="h-9 w-9"
             title="Refresh preview"
           >
             <RefreshCw className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Preview Area */}
       <div className="flex-1 flex items-center justify-center p-6 overflow-auto">
-        {componentTree ? (
-          <SimulatorPreview
-            key={key}
-            componentTree={componentTree}
-            isDark={isDark}
-            onNodeSelect={onNodeSelect}
-            selectedNodeId={selectedNodeId}
-          />
-        ) : (
-          <EmptyState />
-        )}
+        <AnimatePresence mode="wait">
+          {componentTree ? (
+            <motion.div
+              key={key}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={springConfig.default}
+              style={{ transform: `scale(${zoom})`, transformOrigin: 'center center' }}
+            >
+              <SimulatorPreview
+                componentTree={componentTree}
+                isDark={isDark}
+                onNodeSelect={onNodeSelect}
+                selectedNodeId={selectedNodeId}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <EmptyState />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -75,13 +173,18 @@ function SimulatorPreview({
   selectedNodeId?: string | null;
 }) {
   return (
-    <div
+    <motion.div
+      className="simulator-frame"
+      initial={{ y: 20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={springConfig.gentle}
       style={{
         width: 393 + 24,
         background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
         borderRadius: 48,
         padding: 12,
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+        boxShadow:
+          '0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.05)',
       }}
     >
       <div
@@ -92,6 +195,7 @@ function SimulatorPreview({
           borderRadius: 40,
           overflow: 'hidden',
           position: 'relative',
+          transition: 'background 0.3s ease',
         }}
       >
         {/* Status Bar */}
@@ -103,6 +207,7 @@ function SimulatorPreview({
             height: 852 - 48 - 34,
             overflow: 'auto',
             background: isDark ? '#000000' : '#f2f2f7',
+            transition: 'background 0.3s ease',
           }}
         >
           <ComponentPreview
@@ -114,7 +219,7 @@ function SimulatorPreview({
         </div>
 
         {/* Home Indicator */}
-        <div
+        <motion.div
           style={{
             position: 'absolute',
             bottom: 8,
@@ -124,10 +229,11 @@ function SimulatorPreview({
             height: 5,
             background: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.3)',
             borderRadius: 3,
+            transition: 'background 0.3s ease',
           }}
         />
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -151,10 +257,12 @@ function StatusBar({ isDark }: { isDark: boolean }) {
           fontWeight: 600,
           color: textColor,
           fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+          transition: 'color 0.3s ease',
         }}
       >
         9:41
       </span>
+      {/* Dynamic Island */}
       <div
         style={{
           position: 'absolute',
@@ -168,17 +276,29 @@ function StatusBar({ isDark }: { isDark: boolean }) {
         }}
       />
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+        {/* Signal bars */}
         <svg width="18" height="12" viewBox="0 0 18 12" fill={textColor}>
           <rect x="0" y="6" width="3" height="6" rx="1" />
           <rect x="5" y="4" width="3" height="8" rx="1" />
           <rect x="10" y="2" width="3" height="10" rx="1" />
           <rect x="15" y="0" width="3" height="12" rx="1" />
         </svg>
+        {/* WiFi */}
         <svg width="16" height="12" viewBox="0 0 16 12" fill={textColor}>
           <path d="M8 2.4c3.1 0 5.9 1.2 8 3.2l-1.4 1.4C12.8 5.2 10.5 4.2 8 4.2s-4.8 1-6.6 2.8L0 5.6C2.1 3.6 4.9 2.4 8 2.4zm0 3.6c1.9 0 3.6.7 4.9 2l-1.4 1.4C10.5 8.5 9.3 8 8 8s-2.5.5-3.5 1.4L3.1 8c1.3-1.3 3-2 4.9-2zm0 3.6c.9 0 1.8.4 2.4 1l-2.4 2.4-2.4-2.4c.6-.6 1.5-1 2.4-1z" />
         </svg>
+        {/* Battery */}
         <svg width="25" height="12" viewBox="0 0 25 12" fill={textColor}>
-          <rect x="0" y="0" width="22" height="12" rx="3" stroke={textColor} strokeWidth="1" fill="none" />
+          <rect
+            x="0"
+            y="0"
+            width="22"
+            height="12"
+            rx="3"
+            stroke={textColor}
+            strokeWidth="1"
+            fill="none"
+          />
           <rect x="2" y="2" width="17" height="8" rx="1" />
           <path d="M23 4v4a2 2 0 0 0 0-4z" />
         </svg>
@@ -249,6 +369,7 @@ function renderComponentContent(
             color: props.color ? String(props.color) : textColor,
             display: 'block',
             fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+            transition: 'color 0.3s ease',
           }}
         >
           {props.content as string}
@@ -267,6 +388,20 @@ function renderComponentContent(
             fontSize: 17,
             fontWeight: 600,
             fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+            cursor: 'pointer',
+            transition: 'transform 0.1s ease, opacity 0.1s ease',
+          }}
+          onMouseDown={(e) => {
+            (e.target as HTMLButtonElement).style.transform = 'scale(0.97)';
+            (e.target as HTMLButtonElement).style.opacity = '0.8';
+          }}
+          onMouseUp={(e) => {
+            (e.target as HTMLButtonElement).style.transform = 'scale(1)';
+            (e.target as HTMLButtonElement).style.opacity = '1';
+          }}
+          onMouseLeave={(e) => {
+            (e.target as HTMLButtonElement).style.transform = 'scale(1)';
+            (e.target as HTMLButtonElement).style.opacity = '1';
           }}
         >
           {props.label as string}
@@ -296,6 +431,7 @@ function renderComponentContent(
             height: 0.5,
             background: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
             margin: '8px 0',
+            transition: 'background 0.3s ease',
           }}
         />
       );
@@ -339,17 +475,11 @@ function renderComponentContent(
       );
 
     case 'zstack':
-      return (
-        <div style={{ position: 'relative' }}>
-          {renderChildren()}
-        </div>
-      );
+      return <div style={{ position: 'relative' }}>{renderChildren()}</div>;
 
     case 'scrollview':
       return (
-        <div style={{ overflow: 'auto', flex: 1 }}>
-          {renderChildren()}
-        </div>
+        <div style={{ overflow: 'auto', flex: 1 }}>{renderChildren()}</div>
       );
 
     case 'list':
@@ -359,16 +489,18 @@ function renderComponentContent(
             background: isDark ? '#1c1c1e' : '#ffffff',
             borderRadius: 12,
             overflow: 'hidden',
+            transition: 'background 0.3s ease',
           }}
         >
           {renderChildren()}
         </div>
       );
 
-    case 'section':
+    case 'section': {
+      const sectionHeader = typeof props.header === 'string' ? props.header : null;
       return (
         <div style={{ marginBottom: 20 }}>
-          {props.header && (
+          {sectionHeader && (
             <div
               style={{
                 padding: '8px 16px',
@@ -377,9 +509,10 @@ function renderComponentContent(
                 textTransform: 'uppercase',
                 letterSpacing: 0.5,
                 fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                transition: 'color 0.3s ease',
               }}
             >
-              {props.header as string}
+              {sectionHeader}
             </div>
           )}
           <div
@@ -387,17 +520,20 @@ function renderComponentContent(
               background: isDark ? '#1c1c1e' : '#ffffff',
               borderRadius: 12,
               overflow: 'hidden',
+              transition: 'background 0.3s ease',
             }}
           >
             {renderChildren()}
           </div>
         </div>
       );
+    }
 
-    case 'navigationstack':
+    case 'navigationstack': {
+      const navTitle = typeof props.title === 'string' ? props.title : null;
       return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          {props.title && (
+          {navTitle && (
             <div
               style={{
                 padding: '12px 16px',
@@ -411,17 +547,17 @@ function renderComponentContent(
                   fontWeight: 700,
                   color: textColor,
                   fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
+                  transition: 'color 0.3s ease',
                 }}
               >
-                {props.title as string}
+                {navTitle}
               </h1>
             </div>
           )}
-          <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
-            {renderChildren()}
-          </div>
+          <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>{renderChildren()}</div>
         </div>
       );
+    }
 
     case 'navigationlink':
       return (
@@ -433,6 +569,18 @@ function renderComponentContent(
             padding: '12px 16px',
             background: isDark ? '#1c1c1e' : '#ffffff',
             borderBottom: `0.5px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+            cursor: 'pointer',
+            transition: 'background 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            (e.target as HTMLDivElement).style.background = isDark
+              ? '#2c2c2e'
+              : '#f0f0f5';
+          }}
+          onMouseLeave={(e) => {
+            (e.target as HTMLDivElement).style.background = isDark
+              ? '#1c1c1e'
+              : '#ffffff';
           }}
         >
           <div style={{ flex: 1 }}>{renderChildren()}</div>
@@ -459,11 +607,23 @@ function renderComponentContent(
 
 function EmptyState() {
   return (
-    <div className="text-center text-muted-foreground">
-      <Smartphone className="w-16 h-16 mx-auto mb-4 opacity-50" />
-      <p className="text-sm">No preview available</p>
-      <p className="text-xs mt-1">Use the chat to generate your app</p>
-    </div>
+    <motion.div
+      className="text-center text-muted-foreground"
+      variants={fadeInUp}
+      initial="initial"
+      animate="animate"
+    >
+      <motion.div
+        className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4"
+        whileHover={{ scale: 1.05, rotate: 5 }}
+      >
+        <Smartphone className="w-10 h-10 opacity-50" />
+      </motion.div>
+      <p className="text-sm font-medium">No preview available</p>
+      <p className="text-xs mt-1 text-muted-foreground/70">
+        Use the chat to generate your app
+      </p>
+    </motion.div>
   );
 }
 

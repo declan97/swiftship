@@ -17,10 +17,13 @@ export default function NewProjectPage() {
 
     setIsCreating(true);
 
-    // For MVP, just navigate to editor with a new ID
-    // TODO: Create project in Convex
+    // Navigate to editor with name and optional prompt (description)
     const newId = `new-${Date.now()}`;
-    router.push(`/projects/${newId}?name=${encodeURIComponent(name)}`);
+    const params = new URLSearchParams({ name });
+    if (description.trim()) {
+      params.set('prompt', description.trim());
+    }
+    router.push(`/projects/${newId}?${params.toString()}`);
   };
 
   return (
