@@ -18,6 +18,9 @@ import { cn } from '@/lib/utils';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 
+// Prevent static generation since this page uses Convex
+export const dynamic = 'force-dynamic';
+
 export default function DashboardPage() {
   const router = useRouter();
   const projects = useQuery(api.projects.list);
