@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   transpilePackages: ['@swiftship/core', '@swiftship/components', '@swiftship/codegen', '@swiftship/ai'],
   typedRoutes: true,
   // Required for Vercel monorepo deployments
-  outputFileTracingRoot: process.env.VERCEL ? '/vercel/path0' : join(__dirname, '../../'),
+  outputFileTracingRoot: join(__dirname, '../../'),
+  output: 'standalone',
 };
 
 export default nextConfig;
