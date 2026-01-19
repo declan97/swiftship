@@ -24,7 +24,7 @@ interface SidebarProps {
 
 const navItems = [
   { href: '/', icon: Home, label: 'Home' },
-  { href: '/projects/new', icon: Plus, label: 'New Project' },
+  { href: '/dashboard/projects/new', icon: Plus, label: 'New Project' },
 ];
 
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
@@ -110,10 +110,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       {/* Footer */}
       <div className="p-2 border-t">
         <NavItem
-          href="/settings"
-          icon={Settings}
-          label="Settings"
-          isActive={pathname === '/settings'}
+          href="/dashboard"
+          icon={FolderOpen}
+          label="Projects"
+          isActive={pathname === '/dashboard'}
           collapsed={collapsed}
         />
       </div>
